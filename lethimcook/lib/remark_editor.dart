@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'app_theme.dart';
 
 class RemarkEditor extends StatefulWidget {
   final List<String> remarks;
   final ValueChanged<List<String>> onChanged;
 
-  const RemarkEditor({Key? key, required this.remarks, required this.onChanged})
+  const RemarkEditor(
+      {Key? key, required this.remarks, required this.onChanged})
       : super(key: key);
 
   @override
@@ -20,28 +22,27 @@ class _RemarkEditorState extends State<RemarkEditor> {
     _remarks = List.from(widget.remarks);
   }
 
-  void _openRemarkDialog({String? existing, int? index}) {
-    final controller = TextEditingController(text: existing ?? '');
+  void _openDialog({String? existing, int? index}) {
+    final ctrl = TextEditingController(text: existing ?? '');
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(existing == null ? 'Ajouter une remarque' : 'Modifier la remarque'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(existing == null ? 'Ajouter un conseil' : 'Modifier'),
         content: TextField(
-          controller: controller,
-          decoration: InputDecoration(labelText: 'Remarque'),
+          controller: ctrl,
+          decoration: const InputDecoration(labelText: 'Conseil ou remarque'),
           maxLines: 3,
           autofocus: true,
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Annuler'),
-          ),
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Annuler')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () {
-              final text = controller.text.trim();
+              final text = ctrl.text.trim();
               if (text.isEmpty) return;
               setState(() {
                 if (index != null) {
@@ -53,7 +54,7 @@ class _RemarkEditorState extends State<RemarkEditor> {
               widget.onChanged(_remarks);
               Navigator.pop(ctx);
             },
-            child: Text('Valider', style: TextStyle(color: Colors.white)),
+            child: const Text('Valider'),
           ),
         ],
       ),
@@ -65,36 +66,62 @@ class _RemarkEditorState extends State<RemarkEditor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Remarques', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        SizedBox(height: 8),
+        const Text('Conseils',
+            style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: kTextPrimary)),
+        const SizedBox(height: 10),
         if (_remarks.isEmpty)
-          Text('Aucune remarque.', style: TextStyle(color: Colors.grey)),
+          const Padding(
+            padding: EdgeInsets.only(bottom: 8),
+            child: Text('Aucun conseil ajouté.',
+                style: TextStyle(color: kTextSecondary, fontSize: 14)),
+          ),
         ..._remarks.asMap().entries.map((entry) {
           final i = entry.key;
           final remark = entry.value;
-          return Card(
-            margin: EdgeInsets.symmetric(vertical: 4),
-            color: Colors.amber.shade50,
-            child: ListTile(
-              leading: Icon(Icons.lightbulb_outline, color: Colors.amber.shade700),
-              title: Text(remark),
-              trailing: IconButton(
-                icon: Icon(Icons.delete, color: Colors.red.shade300, size: 20),
-                onPressed: () {
-                  setState(() => _remarks.removeAt(i));
-                  widget.onChanged(_remarks);
-                },
-              ),
-              onTap: () => _openRemarkDialog(existing: remark, index: i),
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFBF0),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFFFE082)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.lightbulb, color: Colors.amber.shade600, size: 16),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(remark,
+                      style: const TextStyle(
+                          fontSize: 13, color: kTextPrimary)),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined,
+                      color: kTextSecondary, size: 17),
+                  onPressed: () => _openDialog(existing: remark, index: i),
+                  visualDensity: VisualDensity.compact,
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete_outline,
+                      color: Colors.red.shade300, size: 17),
+                  onPressed: () {
+                    setState(() => _remarks.removeAt(i));
+                    widget.onChanged(_remarks);
+                  },
+                  visualDensity: VisualDensity.compact,
+                ),
+              ],
             ),
           );
         }),
-        SizedBox(height: 8),
+        const SizedBox(height: 4),
         OutlinedButton.icon(
-          onPressed: () => _openRemarkDialog(),
-          icon: Icon(Icons.add, color: Colors.red),
-          label: Text('Ajouter une remarque', style: TextStyle(color: Colors.red)),
-          style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.red)),
+          onPressed: () => _openDialog(),
+          icon: const Icon(Icons.add, size: 18),
+          label: const Text('Ajouter un conseil'),
         ),
       ],
     );

@@ -11,6 +11,9 @@ class Recipe {
   List<RecipeStep> steps;
   List<String> remarks;
   int servings;
+  int? prepTime;  // minutes
+  int? restTime;  // minutes
+  int? cookTime;  // minutes
 
   Recipe({
     this.id,
@@ -21,6 +24,9 @@ class Recipe {
     List<RecipeStep>? steps,
     List<String>? remarks,
     this.servings = 4,
+    this.prepTime,
+    this.restTime,
+    this.cookTime,
   })  : ingredients = ingredients ?? [],
         steps = steps ?? [],
         remarks = remarks ?? [];
@@ -34,6 +40,9 @@ class Recipe {
       'steps': jsonEncode(steps.map((s) => s.toMap()).toList()),
       'remarks': jsonEncode(remarks),
       'servings': servings,
+      'prep_time': prepTime,
+      'rest_time': restTime,
+      'cook_time': cookTime,
     };
     if (id != null) map['id'] = id;
     return map;
@@ -72,6 +81,9 @@ class Recipe {
       steps: stepList,
       remarks: remarkList,
       servings: (map['servings'] as num?)?.toInt() ?? 4,
+      prepTime: (map['prep_time'] as num?)?.toInt(),
+      restTime: (map['rest_time'] as num?)?.toInt(),
+      cookTime: (map['cook_time'] as num?)?.toInt(),
     );
   }
 }

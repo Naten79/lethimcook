@@ -4,6 +4,7 @@
 *.pyc
 *.swp
 .DS_Store
+meeting_TEMPS.md
 .atom/
 .build/
 .buildlog/

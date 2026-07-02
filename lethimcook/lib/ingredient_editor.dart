@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'ingredient.dart';
+import 'app_theme.dart';
 
-/// Widget réutilisable pour gérer la liste d'ingrédients
-/// Utilisé dans AddRecipePage et EditRecipePage
 class IngredientEditor extends StatefulWidget {
   final List<Ingredient> ingredients;
   final ValueChanged<List<Ingredient>> onChanged;
@@ -26,86 +25,80 @@ class _IngredientEditorState extends State<IngredientEditor> {
     _ingredients = List.from(widget.ingredients);
   }
 
-  void _openIngredientDialog({Ingredient? existing, int? index}) {
-    final quantityController = TextEditingController(
+  void _openDialog({Ingredient? existing, int? index}) {
+    final qtyCtrl = TextEditingController(
       text: existing != null
           ? (existing.quantity == existing.quantity.truncateToDouble()
               ? existing.quantity.toInt().toString()
               : existing.quantity.toString())
           : '',
     );
-    final unitController = TextEditingController(text: existing?.unit ?? '');
-    final nameController = TextEditingController(text: existing?.name ?? '');
+    final unitCtrl = TextEditingController(text: existing?.unit ?? '');
+    final nameCtrl = TextEditingController(text: existing?.name ?? '');
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(existing == null ? 'Ajouter un ingrédient' : 'Modifier l\'ingrédient'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(existing == null ? 'Ajouter un ingrédient' : 'Modifier'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              controller: quantityController,
-              decoration: InputDecoration(labelText: 'Quantité (ex: 1.5)'),
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              controller: qtyCtrl,
+              decoration: const InputDecoration(labelText: 'Quantité (ex: 1.5)'),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              autofocus: true,
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 12),
             TextField(
-              controller: unitController,
-              decoration: InputDecoration(
+              controller: unitCtrl,
+              decoration: const InputDecoration(
                 labelText: 'Unité (optionnel)',
-                hintText: 'càc, g, ml, ...',
+                hintText: 'càc, g, ml…',
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 12),
             TextField(
-              controller: nameController,
-              decoration: InputDecoration(labelText: 'Ingrédient (ex: farine)'),
+              controller: nameCtrl,
+              decoration:
+                  const InputDecoration(labelText: 'Ingrédient (ex: farine)'),
             ),
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Annuler'),
-          ),
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Annuler')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () {
               final qty = double.tryParse(
-                quantityController.text.replaceAll(',', '.'),
-              );
-              final name = nameController.text.trim();
+                  qtyCtrl.text.replaceAll(',', '.'));
+              final name = nameCtrl.text.trim();
               if (qty == null || name.isEmpty) return;
-
-              final ingredient = Ingredient(
+              final ing = Ingredient(
                 quantity: qty,
-                unit: unitController.text.trim().isEmpty
+                unit: unitCtrl.text.trim().isEmpty
                     ? null
-                    : unitController.text.trim(),
+                    : unitCtrl.text.trim(),
                 name: name,
               );
-
               setState(() {
                 if (index != null) {
-                  _ingredients[index] = ingredient;
+                  _ingredients[index] = ing;
                 } else {
-                  _ingredients.add(ingredient);
+                  _ingredients.add(ing);
                 }
               });
               widget.onChanged(_ingredients);
               Navigator.pop(ctx);
             },
-            child: Text('Valider', style: TextStyle(color: Colors.white)),
+            child: const Text('Valider'),
           ),
         ],
       ),
     );
-  }
-
-  void _deleteIngredient(int index) {
-    setState(() => _ingredients.removeAt(index));
-    widget.onChanged(_ingredients);
   }
 
   @override
@@ -113,33 +106,61 @@ class _IngredientEditorState extends State<IngredientEditor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Ingrédients',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        SizedBox(height: 8),
+        const Text('Ingrédients',
+            style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: kTextPrimary)),
+        const SizedBox(height: 10),
         if (_ingredients.isEmpty)
-          Text('Aucun ingrédient ajouté.', style: TextStyle(color: Colors.grey)),
+          const Padding(
+            padding: EdgeInsets.only(bottom: 8),
+            child: Text('Aucun ingrédient ajouté.',
+                style: TextStyle(color: kTextSecondary, fontSize: 14)),
+          ),
         ..._ingredients.asMap().entries.map((entry) {
           final i = entry.key;
           final ing = entry.value;
-          return ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            title: Text(ing.display()),
-            trailing: IconButton(
-              icon: Icon(Icons.delete, color: Colors.red.shade300, size: 20),
-              onPressed: () => _deleteIngredient(i),
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                      color: kPrimary, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(ing.display(),
+                      style: const TextStyle(
+                          fontSize: 14, color: kTextPrimary)),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined,
+                      color: kTextSecondary, size: 18),
+                  onPressed: () => _openDialog(existing: ing, index: i),
+                  visualDensity: VisualDensity.compact,
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete_outline,
+                      color: Colors.red.shade300, size: 18),
+                  onPressed: () {
+                    setState(() => _ingredients.removeAt(i));
+                    widget.onChanged(_ingredients);
+                  },
+                  visualDensity: VisualDensity.compact,
+                ),
+              ],
             ),
-            onTap: () => _openIngredientDialog(existing: ing, index: i),
           );
         }),
-        SizedBox(height: 8),
+        const SizedBox(height: 4),
         OutlinedButton.icon(
-          onPressed: () => _openIngredientDialog(),
-          icon: Icon(Icons.add, color: Colors.red),
-          label: Text('Ajouter un ingrédient', style: TextStyle(color: Colors.red)),
-          style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.red)),
+          onPressed: () => _openDialog(),
+          icon: const Icon(Icons.add, size: 18),
+          label: const Text('Ajouter un ingrédient'),
         ),
       ],
     );

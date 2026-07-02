@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'recipe_step.dart';
+import 'app_theme.dart';
 
 class StepEditor extends StatefulWidget {
   final List<RecipeStep> steps;
@@ -21,32 +22,37 @@ class _StepEditorState extends State<StepEditor> {
     _steps = List.from(widget.steps);
   }
 
-  void _openStepDialog({RecipeStep? existing, int? index}) {
-    final textController = TextEditingController(text: existing?.text ?? '');
-    final timerController = TextEditingController(
-      text: existing?.timerMinutes != null ? existing!.timerMinutes.toString() : '',
+  void _openDialog({RecipeStep? existing, int? index}) {
+    final textCtrl = TextEditingController(text: existing?.text ?? '');
+    final timerCtrl = TextEditingController(
+      text: existing?.timerMinutes != null
+          ? existing!.timerMinutes.toString()
+          : '',
     );
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(existing == null ? 'Ajouter une étape' : 'Modifier l\'étape'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(existing == null ? 'Ajouter une étape' : 'Modifier'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              controller: textController,
-              decoration: InputDecoration(labelText: 'Description de l\'étape'),
+              controller: textCtrl,
+              decoration: const InputDecoration(
+                  labelText: 'Description de l\'étape'),
               maxLines: 3,
               autofocus: true,
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 12),
             TextField(
-              controller: timerController,
-              decoration: InputDecoration(
+              controller: timerCtrl,
+              decoration: const InputDecoration(
                 labelText: 'Timer (minutes, optionnel)',
                 hintText: 'ex: 20',
-                prefixIcon: Icon(Icons.timer_outlined, color: Colors.red),
+                prefixIcon:
+                    Icon(Icons.timer_outlined, color: kTextSecondary),
               ),
               keyboardType: TextInputType.number,
             ),
@@ -54,15 +60,13 @@ class _StepEditorState extends State<StepEditor> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Annuler'),
-          ),
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Annuler')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () {
-              final text = textController.text.trim();
+              final text = textCtrl.text.trim();
               if (text.isEmpty) return;
-              final timer = int.tryParse(timerController.text.trim());
+              final timer = int.tryParse(timerCtrl.text.trim());
               final step = RecipeStep(text: text, timerMinutes: timer);
               setState(() {
                 if (index != null) {
@@ -74,16 +78,11 @@ class _StepEditorState extends State<StepEditor> {
               widget.onChanged(_steps);
               Navigator.pop(ctx);
             },
-            child: Text('Valider', style: TextStyle(color: Colors.white)),
+            child: const Text('Valider'),
           ),
         ],
       ),
     );
-  }
-
-  void _deleteStep(int index) {
-    setState(() => _steps.removeAt(index));
-    widget.onChanged(_steps);
   }
 
   @override
@@ -91,13 +90,21 @@ class _StepEditorState extends State<StepEditor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Étapes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        SizedBox(height: 8),
+        const Text('Étapes',
+            style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: kTextPrimary)),
+        const SizedBox(height: 10),
         if (_steps.isEmpty)
-          Text('Aucune étape ajoutée.', style: TextStyle(color: Colors.grey)),
+          const Padding(
+            padding: EdgeInsets.only(bottom: 8),
+            child: Text('Aucune étape ajoutée.',
+                style: TextStyle(color: kTextSecondary, fontSize: 14)),
+          ),
         ReorderableListView.builder(
           shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
+          physics: const NeverScrollableScrollPhysics(),
           itemCount: _steps.length,
           onReorder: (oldIndex, newIndex) {
             setState(() {
@@ -109,48 +116,81 @@ class _StepEditorState extends State<StepEditor> {
           },
           itemBuilder: (context, i) {
             final step = _steps[i];
-            return Card(
+            return Container(
               key: ValueKey('step_$i'),
-              margin: EdgeInsets.symmetric(vertical: 4),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.red,
-                  radius: 14,
-                  child: Text('${i + 1}',
-                      style: TextStyle(color: Colors.white, fontSize: 12)),
-                ),
-                title: Text(step.text),
-                subtitle: step.timerMinutes != null
-                    ? Row(
-                        children: [
-                          Icon(Icons.timer_outlined, size: 14, color: Colors.grey),
-                          SizedBox(width: 4),
-                          Text('${step.timerMinutes} min',
-                              style: TextStyle(color: Colors.grey, fontSize: 12)),
+              margin: const EdgeInsets.symmetric(vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: kBackground,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: kBorder),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                        color: kPrimary, borderRadius: BorderRadius.circular(7)),
+                    alignment: Alignment.center,
+                    child: Text('${i + 1}',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700)),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(step.text,
+                            style: const TextStyle(
+                                fontSize: 13, color: kTextPrimary)),
+                        if (step.timerMinutes != null) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(Icons.timer_outlined,
+                                  size: 12, color: kTextSecondary),
+                              const SizedBox(width: 3),
+                              Text('${step.timerMinutes} min',
+                                  style: const TextStyle(
+                                      color: kTextSecondary,
+                                      fontSize: 11)),
+                            ],
+                          ),
                         ],
-                      )
-                    : null,
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red.shade300, size: 20),
-                      onPressed: () => _deleteStep(i),
+                      ],
                     ),
-                    Icon(Icons.drag_handle, color: Colors.grey),
-                  ],
-                ),
-                onTap: () => _openStepDialog(existing: step, index: i),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined,
+                        color: kTextSecondary, size: 18),
+                    onPressed: () => _openDialog(existing: step, index: i),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete_outline,
+                        color: Colors.red.shade300, size: 18),
+                    onPressed: () {
+                      setState(() => _steps.removeAt(i));
+                      widget.onChanged(_steps);
+                    },
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  const Icon(Icons.drag_handle,
+                      color: kTextSecondary, size: 18),
+                ],
               ),
             );
           },
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         OutlinedButton.icon(
-          onPressed: () => _openStepDialog(),
-          icon: Icon(Icons.add, color: Colors.red),
-          label: Text('Ajouter une étape', style: TextStyle(color: Colors.red)),
-          style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.red)),
+          onPressed: () => _openDialog(),
+          icon: const Icon(Icons.add, size: 18),
+          label: const Text('Ajouter une étape'),
         ),
       ],
     );
